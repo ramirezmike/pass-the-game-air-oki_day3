@@ -63,7 +63,7 @@ impl BallKind {
 
     fn get_radius(&self) -> f32 {
         if self.is_bonus() {
-            BALL_RADIUS / 2.
+            BALL_RADIUS * 0.85
         } else {
             BALL_RADIUS
         }
@@ -124,12 +124,17 @@ fn main() {
             Update,
             (
                 apply_delayed_external_forces,
-                (check_goals, respawn_point_ball, spawn_ball).chain(),
+                (
+                    check_goals,
+                    respawn_point_ball,
+                    spawn_bonus_ball,
+                    spawn_ball,
+                )
+                    .chain(),
                 move_paddle,
                 print_score,
             ),
         )
-        //.add_systems(Update, debug)
         .run();
 }
 
@@ -438,7 +443,9 @@ fn check_goals(
                     } else {
                         score.second_player += 1;
                     }
-                    point_ball_count.0 -= 1;
+                    if let Some(new_score) = point_ball_count.0.checked_sub(1) {
+                        point_ball_count.0 = new_score;
+                    }
                 }
                 BallKind::Gold => {
                     if goal.first_player {
@@ -446,7 +453,9 @@ fn check_goals(
                     } else {
                         score.second_player += 3;
                     }
-                    point_ball_count.0 -= 1;
+                    if let Some(new_score) = point_ball_count.0.checked_sub(1) {
+                        point_ball_count.0 = new_score;
+                    }
                 }
                 BallKind::Multi => {
                     ball_spawner
